@@ -10,7 +10,11 @@
   --text: #e8fff3;
   --muted: #9ec5ae;
   --pixel-label: 'VT323', monospace;
+  --display-font: 'Chakra Petch', sans-serif;
   --body-font: 'Sora', 'Chakra Petch', sans-serif;
+  --panel-shadow:
+    0 0 0 1px rgba(15, 70, 46, 0.5) inset,
+    0 18px 36px rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -27,6 +31,24 @@ body {
     radial-gradient(500px 400px at 70% 100%, rgba(132, 204, 22, 0.16), transparent),
     linear-gradient(180deg, var(--bg), var(--bg-2));
   min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(216, 255, 233, 0.03) 0,
+    rgba(216, 255, 233, 0.03) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+  opacity: 0.45;
+  z-index: -1;
 }
 
 button,
@@ -51,11 +73,12 @@ select {
 }
 
 .app-shell-brand span {
-  font-family: 'Chakra Petch', sans-serif;
+  font-family: var(--display-font);
   font-size: 17px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  text-shadow: 0 0 14px rgba(52, 211, 153, 0.35);
 }
 
 .app-shell-brand small {
@@ -69,7 +92,8 @@ select {
   border: 1px solid var(--line);
   background: rgba(15, 37, 28, 0.68);
   padding: 4px;
-  border-radius: 999px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.18) inset;
 }
 
 .app-shell-tabs button {
@@ -77,9 +101,12 @@ select {
   color: #d9ffeb;
   background: transparent;
   padding: 7px 14px;
-  border-radius: 999px;
+  border-radius: 2px;
   cursor: pointer;
   font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--display-font);
 }
 
 .app-shell-tabs .tab-active {
@@ -133,8 +160,10 @@ select {
 .hero h1,
 .virtual-hero h1 {
   margin: 0;
-  font-family: 'Chakra Petch', sans-serif;
+  font-family: var(--display-font);
   font-size: clamp(1.4rem, 2.3vw, 2rem);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .hero-copy {
@@ -226,8 +255,9 @@ select {
 .panel {
   border: 1px solid var(--line);
   background: var(--panel);
-  border-radius: 18px;
+  border-radius: 6px;
   padding: 14px;
+  box-shadow: var(--panel-shadow);
 }
 
 .panel h3 {
@@ -235,7 +265,9 @@ select {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Chakra Petch', sans-serif;
+  font-family: var(--display-font);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .empty {
@@ -293,11 +325,13 @@ select {
 }
 
 .chip {
-  border-radius: 999px;
+  border-radius: 2px;
   border: 1px solid var(--line);
-  padding: 2px 8px;
+  padding: 2px 7px;
   font-size: 11px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .chip-indigo {
@@ -381,10 +415,11 @@ select {
   position: relative;
   width: 86px;
   height: 86px;
-  border-radius: 12px;
+  border-radius: 3px;
   border: 1px solid rgba(163, 230, 197, 0.35);
   background: rgba(5, 16, 13, 0.86);
   padding: 5px;
+  box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.2) inset;
 }
 
 .avatar-grid {
@@ -392,6 +427,7 @@ select {
   height: 100%;
   display: grid;
   gap: 1px;
+  image-rendering: pixelated;
 }
 
 .avatar-grid-16 {
@@ -406,7 +442,7 @@ select {
   position: absolute;
   top: -6px;
   right: -6px;
-  border-radius: 999px;
+  border-radius: 2px;
   border: 1px solid rgba(163, 230, 197, 0.42);
   background: #f0fff7;
   color: #0f3a2a;
@@ -573,17 +609,61 @@ select {
 
 .virtual-scene-panel {
   overflow: hidden;
+  position: relative;
+}
+
+.office-map-hud {
+  margin: 0 0 10px;
+  padding: 8px;
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  background: rgba(5, 18, 14, 0.85);
+  border-radius: 3px;
+}
+
+.office-map-hud-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.office-map-hud p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--display-font);
 }
 
 .office-scene-shell {
+  position: relative;
   overflow: auto;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 4px;
   background:
     linear-gradient(180deg, rgba(5, 22, 16, 0.96), rgba(6, 15, 13, 0.96)),
     repeating-linear-gradient(0deg, rgba(74, 222, 128, 0.04) 0, rgba(74, 222, 128, 0.04) 1px, transparent 1px, transparent 18px),
     repeating-linear-gradient(90deg, rgba(74, 222, 128, 0.04) 0, rgba(74, 222, 128, 0.04) 1px, transparent 1px, transparent 18px);
   max-height: min(78vh, 760px);
+  box-shadow:
+    0 0 0 1px rgba(14, 57, 39, 0.9) inset,
+    0 30px 60px rgba(0, 0, 0, 0.42);
+}
+
+.office-scene-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 2px,
+    rgba(20, 83, 45, 0.23) 2px,
+    rgba(20, 83, 45, 0.23) 3px
+  );
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.35;
 }
 
 .office-scene {
@@ -592,12 +672,49 @@ select {
   min-height: 420px;
 }
 
+.office-floor-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.office-floor-tile {
+  position: absolute;
+  box-shadow: 0 0 0 1px rgba(16, 58, 40, 0.12) inset;
+}
+
+.office-floor-tile-a {
+  background: rgba(8, 31, 21, 0.76);
+}
+
+.office-floor-tile-b {
+  background: rgba(11, 37, 25, 0.84);
+}
+
+.office-obstacle-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.office-obstacle {
+  position: absolute;
+  border: 1px solid rgba(106, 225, 168, 0.28);
+  background:
+    linear-gradient(180deg, rgba(16, 49, 35, 0.9), rgba(6, 24, 17, 0.92)),
+    repeating-linear-gradient(90deg, rgba(52, 211, 153, 0.14) 0, rgba(52, 211, 153, 0.14) 2px, transparent 2px, transparent 4px);
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 1px rgba(31, 132, 87, 0.32) inset,
+    0 3px 0 rgba(3, 11, 8, 0.5);
+}
+
 .office-zone {
   position: absolute;
-  border: 1px solid rgba(74, 222, 128, 0.5);
-  background: rgba(34, 197, 94, 0.08);
-  border-radius: 6px;
+  border: 1px solid rgba(74, 222, 128, 0.62);
+  background: rgba(34, 197, 94, 0.09);
+  border-radius: 2px;
   padding: 4px;
+  z-index: 1;
+  box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.18) inset;
 }
 
 .office-zone header {
@@ -608,6 +725,42 @@ select {
   color: #d7ffe9;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  font-family: var(--display-font);
+}
+
+.office-zone-intake {
+  border-color: rgba(34, 197, 94, 0.74);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.office-zone-planner_bay {
+  border-color: rgba(56, 189, 248, 0.8);
+  background: rgba(14, 116, 144, 0.14);
+}
+
+.office-zone-frontend_bay {
+  border-color: rgba(45, 212, 191, 0.82);
+  background: rgba(13, 148, 136, 0.15);
+}
+
+.office-zone-backend_bay {
+  border-color: rgba(249, 115, 22, 0.82);
+  background: rgba(194, 65, 12, 0.14);
+}
+
+.office-zone-reviewer_gate {
+  border-color: rgba(59, 130, 246, 0.82);
+  background: rgba(30, 64, 175, 0.14);
+}
+
+.office-zone-break_area {
+  border-color: rgba(168, 85, 247, 0.78);
+  background: rgba(107, 33, 168, 0.12);
+}
+
+.office-zone-orchestrator_desk {
+  border-color: rgba(250, 204, 21, 0.82);
+  background: rgba(161, 98, 7, 0.12);
 }
 
 .office-agent-token {
@@ -620,6 +773,11 @@ select {
   background: transparent;
   cursor: pointer;
   padding: 0;
+  z-index: 3;
+}
+
+.office-agent-token-moving {
+  animation: bob 450ms steps(2) infinite;
 }
 
 .office-agent-token-selected {
@@ -641,7 +799,9 @@ select {
 .agent-sprite {
   width: 100%;
   height: 100%;
-  border-radius: 4px;
+  border-radius: 1px;
+  background: rgba(2, 10, 8, 0.42);
+  image-rendering: pixelated;
 }
 
 .agent-sprite-selected {
@@ -654,6 +814,7 @@ select {
   height: 100%;
   display: grid;
   gap: 1px;
+  image-rendering: pixelated;
 }
 
 .agent-sprite-pixel {
@@ -690,7 +851,8 @@ select {
 .inspector-name {
   margin: 0;
   font-size: 18px;
-  font-family: 'Chakra Petch', sans-serif;
+  font-family: var(--display-font);
+  text-transform: uppercase;
 }
 
 .inspector-callsign {
@@ -698,6 +860,18 @@ select {
   color: #c4ffe0;
   font-family: var(--pixel-label);
   font-size: 18px;
+}
+
+.identity-swatch-row {
+  display: flex;
+  gap: 6px;
+}
+
+.identity-swatch-row span {
+  width: 26px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(226, 255, 240, 0.24);
 }
 
 .inspector-meta {
@@ -841,5 +1015,17 @@ select {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes bob {
+  0% {
+    transform: translate(-50%, -65%);
+  }
+  50% {
+    transform: translate(-50%, -69%);
+  }
+  100% {
+    transform: translate(-50%, -65%);
   }
 }

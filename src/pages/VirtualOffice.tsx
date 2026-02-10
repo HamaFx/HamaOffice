@@ -108,6 +108,10 @@ export default function VirtualOffice() {
     () => (scene ? scene.tasks.filter((task) => task.status.toLowerCase().includes('blocked')).length : 0),
     [scene],
   );
+  const criticalAlerts = useMemo(
+    () => (scene ? scene.alerts.filter((alert) => alert.severity === 'critical').length : 0),
+    [scene],
+  );
 
   const syncClass = scene?.sync_status === 'live' ? 'chip-emerald' : scene?.sync_status === 'stale' ? 'chip-amber' : 'chip-rose';
 
@@ -126,6 +130,7 @@ export default function VirtualOffice() {
             <span className={`chip ${syncClass}`}>sync {scene?.sync_status ?? 'loading'}</span>
             <span className="chip chip-slate">online {onlineCount}</span>
             <span className="chip chip-rose">blocked {blockedCount}</span>
+            <span className="chip chip-orange">critical {criticalAlerts}</span>
             <span className="chip chip-indigo">tasks {scene?.tasks.length ?? 0}</span>
           </div>
         </div>
@@ -202,6 +207,14 @@ export default function VirtualOffice() {
         <section className="virtual-layout">
           <article className="panel virtual-scene-panel">
             <h3>Office Map</h3>
+            <div className="office-map-hud">
+              <div className="office-map-hud-row">
+                <span className="chip chip-slate">agents {filteredAgents.length}</span>
+                <span className="chip chip-cyan">zones {scene.zones.length}</span>
+                <span className="chip chip-teal">density {density}</span>
+              </div>
+              <p>Flow: intake to role bay to reviewer gate to break area</p>
+            </div>
             <OfficeScene
               scene={scene}
               agents={filteredAgents}
@@ -220,6 +233,11 @@ export default function VirtualOffice() {
                 <div className="inspector-grid">
                   <p className="inspector-name">{selectedAgent.displayName}</p>
                   <p className="inspector-callsign">{selectedAgent.identity.callsign}</p>
+                  <div className="identity-swatch-row">
+                    <span style={{ backgroundColor: selectedAgent.identity.baseColor }} />
+                    <span style={{ backgroundColor: selectedAgent.identity.accentColor }} />
+                    <span style={{ backgroundColor: selectedAgent.identity.accessoryColor }} />
+                  </div>
                   <div className="chips">
                     <span className="chip chip-indigo">{selectedAgent.role}</span>
                     <span className="chip chip-cyan">{selectedAgent.runtimeStatus}</span>

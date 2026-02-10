@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import type { OfficeSceneSnapshot } from '../../types';
 import type { SimulatedOfficeAgent } from '../../lib/simulation';
 import { AgentSprite } from './AgentSprite';
+import { OFFICE_OBSTACLES } from '../../../shared/officeLayout';
 
 type OfficeDensity = 'cozy' | 'balanced' | 'dense';
 
@@ -18,10 +20,22 @@ function tileSizeForDensity(density: OfficeDensity): number {
   return 18;
 }
 
+function zoneClass(zoneId: string): string {
+  return `office-zone office-zone-${zoneId}`;
+}
+
 export function OfficeScene({ scene, agents, selectedAgentId, onSelectAgent, density }: OfficeSceneProps) {
   const tileSize = tileSizeForDensity(density);
   const widthPx = scene.width * tileSize;
   const heightPx = scene.height * tileSize;
+  const tiles = useMemo(
+    () =>
+      Array.from({ length: scene.width * scene.height }, (_, index) => ({
+        x: index % scene.width,
+        y: Math.floor(index / scene.width),
+      })),
+    [scene.height, scene.width],
+  );
 
   return (
     <div className="office-scene-shell">
@@ -33,12 +47,42 @@ export function OfficeScene({ scene, agents, selectedAgentId, onSelectAgent, den
           ['--office-tile-size' as string]: `${tileSize}px`,
         }}
       >
+        <div className="office-floor-layer" aria-hidden>
+          {tiles.map((tile) => (
+            <span
+              key={`tile-${tile.x}-${tile.y}`}
+              className={`office-floor-tile ${(tile.x + tile.y) % 2 === 0 ? 'office-floor-tile-a' : 'office-floor-tile-b'}`}
+              style={{
+                left: `${tile.x * tileSize}px`,
+                top: `${tile.y * tileSize}px`,
+                width: `${tileSize}px`,
+                height: `${tileSize}px`,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="office-obstacle-layer" aria-hidden>
+          {OFFICE_OBSTACLES.map((obstacle, index) => (
+            <span
+              key={`obstacle-${index}`}
+              className="office-obstacle"
+              style={{
+                left: `${obstacle.x * tileSize}px`,
+                top: `${obstacle.y * tileSize}px`,
+                width: `${obstacle.width * tileSize}px`,
+                height: `${obstacle.height * tileSize}px`,
+              }}
+            />
+          ))}
+        </div>
+
         {scene.zones.map((zone) => {
           const occupancy = scene.occupancy.find((entry) => entry.zoneId === zone.id);
           return (
             <div
               key={zone.id}
-              className="office-zone"
+              className={zoneClass(zone.id)}
               style={{
                 left: `${zone.x * tileSize}px`,
                 top: `${zone.y * tileSize}px`,
@@ -60,7 +104,7 @@ export function OfficeScene({ scene, agents, selectedAgentId, onSelectAgent, den
           <button
             key={agent.agentId}
             type="button"
-            className={`office-agent-token ${selectedAgentId === agent.agentId ? 'office-agent-token-selected' : ''}`}
+            className={`office-agent-token ${selectedAgentId === agent.agentId ? 'office-agent-token-selected' : ''} ${agent.isMoving ? 'office-agent-token-moving' : ''}`}
             style={{
               left: `${agent.position.x * tileSize}px`,
               top: `${agent.position.y * tileSize}px`,
