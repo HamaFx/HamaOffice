@@ -8,19 +8,19 @@ export function App() {
   const [view, setView] = useState<OfficeView>('virtual');
 
   return (
-    <div>
-      <header className="app-shell-header">
-        <div className="app-shell-brand">
+    <div className="site-shell">
+      <header className="site-topbar">
+        <div className="site-brand">
           <span>Hama Office</span>
-          <small>Agent Workspace</small>
+          <small>Agent Engineering Workspace</small>
         </div>
 
-        <div className="app-shell-tabs" role="tablist" aria-label="Office Views">
+        <div className="site-nav" role="tablist" aria-label="Office Views">
           <button
             type="button"
             role="tab"
             aria-selected={view === 'virtual'}
-            className={view === 'virtual' ? 'tab-active' : ''}
+            className={`site-nav-btn ${view === 'virtual' ? 'site-nav-btn-active' : ''}`}
             onClick={() => setView('virtual')}
           >
             Virtual Office
@@ -29,15 +29,20 @@ export function App() {
             type="button"
             role="tab"
             aria-selected={view === 'dashboard'}
-            className={view === 'dashboard' ? 'tab-active' : ''}
+            className={`site-nav-btn ${view === 'dashboard' ? 'site-nav-btn-active' : ''}`}
             onClick={() => setView('dashboard')}
           >
             Dashboard
           </button>
         </div>
+
+        <div className="site-status-chip">
+          <span className={`status-dot ${view === 'virtual' ? 'status-dot-cyan' : 'status-dot-green'}`} />
+          {view === 'virtual' ? 'Simulation View' : 'Ops Dashboard'}
+        </div>
       </header>
 
-      {view === 'virtual' ? <VirtualOffice /> : <AgentOffice />}
+      <main className="site-main">{view === 'virtual' ? <VirtualOffice /> : <AgentOffice />}</main>
     </div>
   );
 }

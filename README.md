@@ -12,11 +12,15 @@ Virtual operations workspace for OpenClaw agents.
 
 ## UI structure
 
-- `src/pages/VirtualOffice.tsx`: page orchestration and state composition
-- `src/components/virtual-office/*`: hero, controls, overview, scene shell, sidebar panels
-- `src/components/office/OfficeScene.tsx`: tile map and pixel scene rendering
-- `src/styles/virtual-office.css`: dedicated virtual office layout + theme styles
-- `src/index.css`: shared/global styles used across app views
+- `src/pages/VirtualOffice.tsx`: virtual office composition
+- `src/components/virtual-office/*`: virtual office sections (hero, controls, overview, scene panel, sidebar)
+- `src/pages/AgentOffice.tsx`: dashboard composition
+- `src/components/dashboard/*`: dashboard sections (hero, stats, roster, queue, metrics)
+- `src/components/office/OfficeScene.tsx`: tile map and pixel scene renderer
+- `src/styles/app-shell.css`: top-level site shell and navigation
+- `src/styles/dashboard.css`: dashboard layout and component styling
+- `src/styles/virtual-office.css`: virtual office layout + scene themes
+- `src/index.css`: shared design tokens, primitives, and common utilities
 
 ## Run locally
 
