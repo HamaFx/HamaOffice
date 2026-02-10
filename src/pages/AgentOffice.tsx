@@ -210,7 +210,7 @@ export default function AgentOffice() {
             {snapshot.agents.map((agent) => (
               <article key={agent.id} className="agent-card">
                 <div className="agent-head">
-                  <PixelAvatar seed={agent.avatarSeed} role={agent.role} emoji={agent.emoji} />
+                  <PixelAvatar seed={agent.avatarSeed} role={agent.role} emoji={agent.emoji} displayName={agent.displayName} />
                   <div className="agent-meta">
                     <div className="agent-title-row">
                       <h4>{agent.displayName}</h4>
@@ -220,6 +220,8 @@ export default function AgentOffice() {
                     <p className="agent-model">{agent.model}</p>
                     <div className="chips">
                       <span className={`chip ${roleAccent(agent.role)}`}>{agent.role}</span>
+                      <span className="chip chip-slate">{agent.identity.callsign}</span>
+                      <span className="chip chip-teal">{agent.identity.gait}</span>
                       {agent.isDefault && <span className="chip chip-indigo">default</span>}
                       {agent.hasBinding && <span className="chip chip-cyan">routed</span>}
                     </div>

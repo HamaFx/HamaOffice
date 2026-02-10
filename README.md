@@ -1,6 +1,12 @@
 # Hama Office
 
-Standalone Agent Office dashboard for viewing OpenClaw agent activity, task queue, and telemetry.
+Virtual operations workspace for OpenClaw agents.
+
+- Dual-view app: `Virtual Office` (pixel scene) + `Dashboard` (metrics board)
+- Agent identities: deterministic callsign, gait, accessory, palette
+- Live sync: poll truth from backend + client-side movement simulation
+- Cloud-ready backend: Vercel API routes with KV/Postgres adapters
+- Local push gateway: stream OpenClaw snapshots/events to deployed Vercel app
 
 ## Run locally
 
@@ -9,16 +15,58 @@ npm install
 npm run dev
 ```
 
+## Scripts
+
+- `npm run dev`: run local app
+- `npm run build`: production build
+- `npm run lint`: eslint
+- `npm run typecheck`: TypeScript checks
+- `npm run test`: Vitest suite
+- `npm run office:push -- --once`: send one local OpenClaw snapshot to ingest API
+- `npm run office:push -- --watch --url=https://your-app.vercel.app/api/ingest`: continuous sync
+
 ## API endpoints
 
-- `/api/workspace`
-- `/api/agents`
-- `/api/tasks`
-- `/api/metrics`
+Read APIs:
+- `GET /api/workspace`
+- `GET /api/agents`
+- `GET /api/tasks`
+- `GET /api/metrics`
+- `GET /api/office/state`
+- `GET /api/office/timeline?limit=100`
 
-## Env vars
+Ingest APIs:
+- `POST /api/ingest/snapshot`
+- `POST /api/ingest/event`
 
-- `AGENT_OFFICE_OPENCLAW_DIR` (default: `~/.openclaw`)
-- `AGENT_OFFICE_WORKSPACE_DIR` (default: `~/clawd`)
-- `AGENT_OFFICE_READ_TOKEN` (optional backend token)
-- `VITE_AGENT_OFFICE_TOKEN` (optional frontend token passed to API)
+## Environment variables
+
+Copy `.env.example` and set the values you use.
+
+Minimum for local dev:
+- `AGENT_OFFICE_OPENCLAW_DIR`
+- `AGENT_OFFICE_WORKSPACE_DIR`
+
+Recommended for deployment:
+- `AGENT_OFFICE_READ_TOKEN`
+- `AGENT_OFFICE_INGEST_TOKEN`
+- `KV_REST_API_URL`
+- `KV_REST_API_TOKEN`
+- `POSTGRES_URL`
+
+## Data flow
+
+1. OpenClaw runs on your machine and writes queue/telemetry/session files.
+2. `scripts/push-openclaw-state.ts` reads those files and posts snapshots/events.
+3. Vercel ingest routes validate payloads, enforce auth/rate limits, and store:
+   - latest scene/workspace in KV
+   - timeline + snapshot history in Postgres
+4. UI polls `/api/office/state` and `/api/office/timeline`, then simulates movement between updates.
+
+## Database migration
+
+SQL migration for Postgres tables:
+
+- `db/migrations/0001_office.sql`
+
+Apply it to your Vercel Postgres database before enabling production history storage.

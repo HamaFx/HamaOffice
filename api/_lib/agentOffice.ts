@@ -1,80 +1,25 @@
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { createAgentIdentityProfile } from '../../shared/identity.js';
+import { OFFICE_GRID_HEIGHT, OFFICE_GRID_WIDTH, OFFICE_ZONES } from '../../shared/officeLayout.js';
+import type {
+  AgentOfficeIdentity,
+  AgentOfficeMetrics,
+  AgentOfficeRole,
+  AgentOfficeRuntimeStatus,
+  AgentOfficeTask,
+  AgentOfficeWorkspaceSnapshot,
+  OfficeAgentActivityState,
+  OfficeAgentState,
+  OfficeEvent,
+  OfficeSceneSnapshot,
+  OfficeZone,
+} from '../../shared/types.js';
+import { hasReadAccess } from './auth.js';
+import { getLatestScene, getLatestWorkspace, setLatestScene, setLatestWorkspace } from './storage.js';
 
 type JsonObject = Record<string, unknown>;
-
-type AgentRole = 'orchestrator' | 'planner' | 'frontend' | 'backend' | 'reviewer' | 'worker';
-type AgentRuntimeStatus = 'online' | 'idle' | 'offline';
-
-interface AgentOfficeIdentity {
-  id: string;
-  displayName: string;
-  role: AgentRole;
-  characterName: string;
-  emoji: string;
-  avatarSeed: string;
-  model: string;
-  isDefault: boolean;
-  hasBinding: boolean;
-  status: AgentRuntimeStatus;
-  lastUpdatedAt: string | null;
-  lastSummary: string | null;
-  lastSessionId: string | null;
-  totalInputTokens: number;
-  totalOutputTokens: number;
-  totalTokens: number;
-}
-
-interface AgentOfficeTask {
-  task_id: string;
-  goal: string;
-  priority: string;
-  status: string;
-  owner: string;
-  depends_on: string[];
-  attempts: number;
-  review_loops: number;
-  created_at: string;
-  updated_at: string;
-  notes: string[];
-}
-
-interface AgentOfficeStatusCount {
-  status: string;
-  count: number;
-}
-
-interface AgentOfficeFailureCause {
-  cause: string;
-  count: number;
-}
-
-interface AgentOfficeMetrics {
-  total_tasks: number;
-  pass_rate: number;
-  status_counts: AgentOfficeStatusCount[];
-  avg_lead_time_ms: number;
-  avg_attempts: number;
-  avg_review_loops: number;
-  total_cost_usd: number;
-  avg_cost_usd: number;
-  top_failure_causes: AgentOfficeFailureCause[];
-}
-
-interface AgentOfficeSources {
-  openclaw_config: boolean;
-  queue_state: boolean;
-  telemetry: boolean;
-}
-
-export interface AgentOfficeWorkspaceSnapshot {
-  generated_at: string;
-  sources: AgentOfficeSources;
-  agents: AgentOfficeIdentity[];
-  tasks: AgentOfficeTask[];
-  metrics: AgentOfficeMetrics;
-}
 
 interface OpenClawConfig {
   agents?: {
@@ -121,7 +66,7 @@ const DEFAULT_METRICS: AgentOfficeMetrics = {
   top_failure_causes: [],
 };
 
-const ROLE_TO_CHARACTER: Record<AgentRole, string> = {
+const ROLE_TO_CHARACTER: Record<AgentOfficeRole, string> = {
   orchestrator: 'Captain Orbit',
   planner: 'Map Sage',
   frontend: 'Pixel Alchemist',
@@ -130,13 +75,22 @@ const ROLE_TO_CHARACTER: Record<AgentRole, string> = {
   worker: 'Ops Runner',
 };
 
-const ROLE_TO_EMOJI: Record<AgentRole, string> = {
+const ROLE_TO_EMOJI: Record<AgentOfficeRole, string> = {
   orchestrator: '🧭',
   planner: '🧠',
   frontend: '🎨',
   backend: '🛠',
   reviewer: '✅',
   worker: '🤖',
+};
+
+const ROLE_ZONE_MAP: Record<AgentOfficeRole, string> = {
+  orchestrator: 'orchestrator_desk',
+  planner: 'planner_bay',
+  frontend: 'frontend_bay',
+  backend: 'backend_bay',
+  reviewer: 'reviewer_gate',
+  worker: 'intake',
 };
 
 function parsePositiveNumber(value: unknown): number {
@@ -179,7 +133,7 @@ async function readJsonLines(filePath: string): Promise<JsonObject[]> {
   }
 }
 
-function inferRole(agentId: string): AgentRole {
+function inferRole(agentId: string): AgentOfficeRole {
   const id = agentId.toLowerCase();
   if (id.includes('orchestrator')) return 'orchestrator';
   if (id.includes('planner')) return 'planner';
@@ -189,7 +143,7 @@ function inferRole(agentId: string): AgentRole {
   return 'worker';
 }
 
-function inferRuntimeStatus(updatedAtMs: number | null): AgentRuntimeStatus {
+function inferRuntimeStatus(updatedAtMs: number | null): AgentOfficeRuntimeStatus {
   if (!updatedAtMs) return 'offline';
   const ageMs = Date.now() - updatedAtMs;
   if (ageMs < 10 * 60 * 1000) return 'online';
@@ -200,6 +154,19 @@ function inferRuntimeStatus(updatedAtMs: number | null): AgentRuntimeStatus {
 function average(values: number[]): number {
   if (!values.length) return 0;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function normalizeTaskStatus(status: string): string {
+  return status.trim().toLowerCase();
+}
+
+function hashSeed(seed: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash ^= seed.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
 }
 
 function resolveOfficeDirectories() {
@@ -283,6 +250,7 @@ async function loadAgents(openclawDir: string, config: OpenClawConfig | null): P
       const hasBinding = bindings.some((binding) => binding.agentId === agent.id);
       const displayName = agent.identity?.name || agent.name || agent.id;
       const emoji = agent.identity?.emoji || ROLE_TO_EMOJI[role];
+      const identity = createAgentIdentityProfile(agent.id, role, displayName);
 
       return {
         id: agent.id,
@@ -301,6 +269,7 @@ async function loadAgents(openclawDir: string, config: OpenClawConfig | null): P
         totalInputTokens: snapshot.totalInputTokens,
         totalOutputTokens: snapshot.totalOutputTokens,
         totalTokens: snapshot.totalTokens,
+        identity,
       };
     }),
   );
@@ -367,13 +336,255 @@ async function loadMetrics(telemetryPath: string): Promise<AgentOfficeMetrics> {
   };
 }
 
-export function hasAgentOfficeAccess(request: Request): boolean {
-  const token = process.env.AGENT_OFFICE_READ_TOKEN;
-  if (!token) return true;
-  return request.headers.get('x-agent-office-token') === token;
+function findZone(id: string): OfficeZone {
+  return OFFICE_ZONES.find((zone) => zone.id === id) ?? OFFICE_ZONES[0];
 }
 
-export async function getAgentOfficeWorkspaceSnapshot(): Promise<AgentOfficeWorkspaceSnapshot> {
+function zoneTarget(
+  zone: OfficeZone,
+  seed: string,
+  slot: number,
+): {
+  x: number;
+  y: number;
+} {
+  const width = Math.max(1, zone.width - 2);
+  const height = Math.max(1, zone.height - 2);
+  const value = hashSeed(`${seed}:${zone.id}:${slot}`);
+
+  const offsetX = value % width;
+  const offsetY = Math.floor(value / width) % height;
+
+  return {
+    x: zone.x + 1 + offsetX,
+    y: zone.y + 1 + offsetY,
+  };
+}
+
+function resolveActivityState(agent: AgentOfficeIdentity, task: AgentOfficeTask | null): OfficeAgentActivityState {
+  if (agent.status === 'offline') return 'offline';
+  if (!task) return 'idle';
+
+  const status = normalizeTaskStatus(task.status);
+  if (status.includes('blocked') || status.includes('fail')) return 'blocked';
+  if (status.includes('review')) return 'reviewing';
+  if (status.includes('progress') || status === 'active' || status === 'running') return 'active';
+  if (status === 'done' || status === 'pass') return 'idle';
+  return 'active';
+}
+
+function findPrimaryTask(agentId: string, tasks: AgentOfficeTask[]): AgentOfficeTask | null {
+  const owned = tasks.filter((task) => task.owner === agentId);
+  if (!owned.length) return null;
+
+  const ordered = owned.sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at));
+
+  const blocked = ordered.find((task) => normalizeTaskStatus(task.status).includes('blocked'));
+  if (blocked) return blocked;
+
+  const active = ordered.find((task) => {
+    const status = normalizeTaskStatus(task.status);
+    return status.includes('progress') || status === 'active' || status === 'running';
+  });
+  if (active) return active;
+
+  const review = ordered.find((task) => normalizeTaskStatus(task.status).includes('review'));
+  if (review) return review;
+
+  return ordered[0];
+}
+
+function resolveTargetZone(agent: AgentOfficeIdentity, activityState: OfficeAgentActivityState): OfficeZone {
+  if (activityState === 'blocked' || activityState === 'reviewing') {
+    return findZone('reviewer_gate');
+  }
+  if (activityState === 'offline') {
+    return findZone('break_area');
+  }
+  if (activityState === 'idle') {
+    return agent.role === 'orchestrator' ? findZone('orchestrator_desk') : findZone('break_area');
+  }
+  return findZone(ROLE_ZONE_MAP[agent.role]);
+}
+
+function resolveDirection(agent: AgentOfficeIdentity): 'up' | 'down' | 'left' | 'right' {
+  const value = hashSeed(agent.id) % 4;
+  if (value === 0) return 'up';
+  if (value === 1) return 'down';
+  if (value === 2) return 'left';
+  return 'right';
+}
+
+function collectEvents(workspace: AgentOfficeWorkspaceSnapshot): OfficeEvent[] {
+  const now = workspace.generated_at;
+  const events: OfficeEvent[] = [];
+
+  for (const task of workspace.tasks.slice(0, 8)) {
+    const status = normalizeTaskStatus(task.status);
+    if (status.includes('blocked')) {
+      events.push({
+        id: `ev-${task.task_id}-blocked-${task.updated_at}`,
+        type: 'task_blocked',
+        severity: 'warning',
+        message: `${task.owner} blocked on ${task.goal}`,
+        createdAt: task.updated_at,
+        taskId: task.task_id,
+        agentId: task.owner,
+      });
+      continue;
+    }
+
+    if (status === 'pass' || status === 'done') {
+      events.push({
+        id: `ev-${task.task_id}-pass-${task.updated_at}`,
+        type: 'task_passed',
+        severity: 'info',
+        message: `${task.owner} completed ${task.goal}`,
+        createdAt: task.updated_at,
+        taskId: task.task_id,
+        agentId: task.owner,
+      });
+      continue;
+    }
+
+    if (task.review_loops >= 3) {
+      events.push({
+        id: `ev-${task.task_id}-review-${task.updated_at}`,
+        type: 'review_loop_spike',
+        severity: 'warning',
+        message: `${task.owner} is in repeated review loops (${task.review_loops})`,
+        createdAt: task.updated_at,
+        taskId: task.task_id,
+        agentId: task.owner,
+      });
+      continue;
+    }
+
+    if (status.includes('progress')) {
+      events.push({
+        id: `ev-${task.task_id}-progress-${task.updated_at}`,
+        type: 'task_progress',
+        severity: 'info',
+        message: `${task.owner} is progressing ${task.goal}`,
+        createdAt: task.updated_at,
+        taskId: task.task_id,
+        agentId: task.owner,
+      });
+    }
+  }
+
+  events.push({
+    id: `ev-snapshot-${now}`,
+    type: 'snapshot_ingested',
+    severity: 'info',
+    message: `Workspace snapshot refreshed at ${new Date(now).toLocaleTimeString()}`,
+    createdAt: now,
+  });
+
+  return events.slice(0, 16);
+}
+
+function collectAlerts(workspace: AgentOfficeWorkspaceSnapshot) {
+  return workspace.tasks
+    .filter((task) => normalizeTaskStatus(task.status).includes('blocked') || task.review_loops >= 3)
+    .slice(0, 8)
+    .map((task) => {
+      const blocked = normalizeTaskStatus(task.status).includes('blocked');
+      return {
+        id: `alert-${task.task_id}`,
+        severity: blocked ? 'critical' : 'warning',
+        message: blocked
+          ? `${task.owner} blocked: ${task.goal}`
+          : `${task.owner} high review loops (${task.review_loops})`,
+        createdAt: task.updated_at,
+        agentId: task.owner,
+        taskId: task.task_id,
+      } as const;
+    });
+}
+
+function computeSyncStatus(generatedAt: string): 'live' | 'stale' | 'offline' {
+  const age = Date.now() - Date.parse(generatedAt);
+  if (age <= 45_000) return 'live';
+  if (age <= 5 * 60_000) return 'stale';
+  return 'offline';
+}
+
+function normalizeWorkspaceSnapshot(workspace: AgentOfficeWorkspaceSnapshot): AgentOfficeWorkspaceSnapshot {
+  return {
+    ...workspace,
+    agents: workspace.agents.map((agent) => ({
+      ...agent,
+      totalInputTokens: parsePositiveNumber(agent.totalInputTokens),
+      totalOutputTokens: parsePositiveNumber(agent.totalOutputTokens),
+      totalTokens: parsePositiveNumber(agent.totalTokens),
+      identity: agent.identity ?? createAgentIdentityProfile(agent.avatarSeed, agent.role, agent.displayName),
+    })),
+  };
+}
+
+export function buildOfficeSceneFromWorkspace(
+  workspace: AgentOfficeWorkspaceSnapshot,
+  source: 'ingest' | 'local',
+  priorScene?: OfficeSceneSnapshot | null,
+): OfficeSceneSnapshot {
+  const slot = Math.floor(Date.parse(workspace.generated_at) / 20000);
+  const zoneCounts = new Map<string, number>();
+
+  const priorPositions = new Map(priorScene?.agents.map((agent) => [agent.agentId, agent.tile]) ?? []);
+
+  const agents: OfficeAgentState[] = workspace.agents.map((agent) => {
+    const task = findPrimaryTask(agent.id, workspace.tasks);
+    const activityState = resolveActivityState(agent, task);
+    const targetZone = resolveTargetZone(agent, activityState);
+    const count = zoneCounts.get(targetZone.id) ?? 0;
+    zoneCounts.set(targetZone.id, count + 1);
+
+    const target = zoneTarget(targetZone, agent.id, slot + count);
+    const prior = priorPositions.get(agent.id);
+
+    return {
+      agentId: agent.id,
+      displayName: agent.displayName,
+      role: agent.role,
+      runtimeStatus: agent.status,
+      activityState,
+      direction: resolveDirection(agent),
+      tile: prior ?? target,
+      targetTile: target,
+      targetZoneId: targetZone.id,
+      currentTaskId: task?.task_id ?? null,
+      lastEventAt: task?.updated_at ?? agent.lastUpdatedAt,
+      isMoving: !prior || prior.x !== target.x || prior.y !== target.y,
+      identity: agent.identity,
+    };
+  });
+
+  const occupancy = OFFICE_ZONES.map((zone) => ({
+    zoneId: zone.id,
+    count: agents.filter((agent) => agent.targetZoneId === zone.id).length,
+    capacity: zone.capacity,
+  }));
+
+  return {
+    generated_at: workspace.generated_at,
+    source,
+    sync_status: computeSyncStatus(workspace.generated_at),
+    last_ingested_at: source === 'ingest' ? workspace.generated_at : priorScene?.last_ingested_at ?? null,
+    stale_after_ms: 45_000,
+    width: OFFICE_GRID_WIDTH,
+    height: OFFICE_GRID_HEIGHT,
+    zones: OFFICE_ZONES,
+    agents,
+    occupancy,
+    alerts: collectAlerts(workspace),
+    events: collectEvents(workspace),
+    tasks: workspace.tasks,
+    metrics: workspace.metrics,
+  };
+}
+
+export async function getLocalWorkspaceSnapshot(): Promise<AgentOfficeWorkspaceSnapshot> {
   const dirs = resolveOfficeDirectories();
 
   const [config, tasks, metrics] = await Promise.all([
@@ -384,7 +595,7 @@ export async function getAgentOfficeWorkspaceSnapshot(): Promise<AgentOfficeWork
 
   const agents = await loadAgents(dirs.openclawDir, config);
 
-  return {
+  return normalizeWorkspaceSnapshot({
     generated_at: new Date().toISOString(),
     sources: {
       openclaw_config: Boolean(config),
@@ -394,5 +605,36 @@ export async function getAgentOfficeWorkspaceSnapshot(): Promise<AgentOfficeWork
     agents,
     tasks,
     metrics,
+  });
+}
+
+export async function getAgentOfficeWorkspaceSnapshot(): Promise<AgentOfficeWorkspaceSnapshot> {
+  const stored = await getLatestWorkspace();
+  if (stored) return normalizeWorkspaceSnapshot(stored);
+
+  const local = await getLocalWorkspaceSnapshot();
+  await setLatestWorkspace(local);
+  return local;
+}
+
+export async function getOfficeStateEnvelope(): Promise<{
+  workspace: AgentOfficeWorkspaceSnapshot;
+  scene: OfficeSceneSnapshot;
+}> {
+  const [workspace, scene] = await Promise.all([getAgentOfficeWorkspaceSnapshot(), getLatestScene()]);
+
+  if (scene) {
+    return { workspace, scene };
+  }
+
+  const built = buildOfficeSceneFromWorkspace(workspace, 'local');
+  await setLatestScene(built);
+  return {
+    workspace,
+    scene: built,
   };
+}
+
+export function hasAgentOfficeAccess(request: Request): boolean {
+  return hasReadAccess(request);
 }

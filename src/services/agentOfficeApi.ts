@@ -3,6 +3,8 @@ import type {
   AgentOfficeMetrics,
   AgentOfficeTask,
   AgentOfficeWorkspaceSnapshot,
+  OfficeEvent,
+  OfficeStateEnvelope,
 } from '../types';
 
 type ApiEnvelope<T> = {
@@ -24,8 +26,8 @@ function buildHeaders(): Headers {
   return headers;
 }
 
-async function requestOffice<T>(action: 'workspace' | 'agents' | 'tasks' | 'metrics'): Promise<T> {
-  const response = await fetch(`/api/${action}`, {
+async function requestOffice<T>(path: string): Promise<T> {
+  const response = await fetch(path, {
     method: 'GET',
     headers: buildHeaders(),
     credentials: 'include',
@@ -51,17 +53,25 @@ async function requestOffice<T>(action: 'workspace' | 'agents' | 'tasks' | 'metr
 }
 
 export async function fetchAgentOfficeWorkspace(): Promise<AgentOfficeWorkspaceSnapshot> {
-  return requestOffice<AgentOfficeWorkspaceSnapshot>('workspace');
+  return requestOffice<AgentOfficeWorkspaceSnapshot>('/api/workspace');
 }
 
 export async function fetchAgentOfficeAgents(): Promise<AgentOfficeIdentity[]> {
-  return requestOffice<AgentOfficeIdentity[]>('agents');
+  return requestOffice<AgentOfficeIdentity[]>('/api/agents');
 }
 
 export async function fetchAgentOfficeTasks(): Promise<AgentOfficeTask[]> {
-  return requestOffice<AgentOfficeTask[]>('tasks');
+  return requestOffice<AgentOfficeTask[]>('/api/tasks');
 }
 
 export async function fetchAgentOfficeMetrics(): Promise<AgentOfficeMetrics> {
-  return requestOffice<AgentOfficeMetrics>('metrics');
+  return requestOffice<AgentOfficeMetrics>('/api/metrics');
+}
+
+export async function fetchOfficeState(): Promise<OfficeStateEnvelope> {
+  return requestOffice<OfficeStateEnvelope>('/api/office/state');
+}
+
+export async function fetchOfficeTimeline(limit = 80): Promise<{ events: OfficeEvent[]; count: number; limit: number }> {
+  return requestOffice<{ events: OfficeEvent[]; count: number; limit: number }>(`/api/office/timeline?limit=${limit}`);
 }

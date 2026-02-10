@@ -1,20 +1,26 @@
-import { getAgentOfficeWorkspaceSnapshot, hasAgentOfficeAccess } from './_lib/agentOffice.js';
-import { forbidden, ok } from './_lib/http.js';
+import { getAgentOfficeWorkspaceSnapshot } from './_lib/agentOffice.js';
+import { fail, forbidden, ok, tooManyRequests } from './_lib/http.js';
+import { hasReadAccess } from './_lib/auth.js';
+import { limitReadRequest } from './_lib/rateLimit.js';
 
 export async function GET(request: Request) {
-  if (!hasAgentOfficeAccess(request)) {
+  if (!hasReadAccess(request)) {
     return forbidden('Agent Office access denied');
   }
-  const data = await getAgentOfficeWorkspaceSnapshot();
-  return ok({
-    total_tasks: data.metrics.total_tasks,
-    pass_rate: data.metrics.pass_rate,
-    status_counts: data.metrics.status_counts,
-    avg_lead_time_ms: data.metrics.avg_lead_time_ms,
-    avg_attempts: data.metrics.avg_attempts,
-    avg_review_loops: data.metrics.avg_review_loops,
-    total_cost_usd: data.metrics.total_cost_usd,
-    avg_cost_usd: data.metrics.avg_cost_usd,
-    top_failure_causes: data.metrics.top_failure_causes,
-  });
+
+  const rate = await limitReadRequest(request);
+  if (!rate.allowed) {
+    return tooManyRequests(rate.resetAt);
+  }
+
+  try {
+    const data = await getAgentOfficeWorkspaceSnapshot();
+    return ok(data.metrics, {
+      'x-rate-limit-remaining': String(rate.remaining),
+    });
+  } catch (error) {
+    return fail('Unable to read metrics snapshot', 500, {
+      message: error instanceof Error ? error.message : 'unknown',
+    });
+  }
 }
