@@ -4,6 +4,8 @@ Virtual operations workspace for OpenClaw agents.
 
 - Dual-view app: `Virtual Office` (pixel scene) + `Dashboard` (metrics board)
 - Agent identities: deterministic callsign, gait, accessory, palette
+- Pixel office themes: day, night, and neon with animated ambience
+- Animated office props: desks, terminals, server racks, coffee station, gate beacons
 - Live sync: poll truth from backend + client-side movement simulation
 - Cloud-ready backend: Vercel API routes with KV/Postgres adapters
 - Local push gateway: stream OpenClaw snapshots/events to deployed Vercel app

@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
+import { OFFICE_OBSTACLES } from '../../../shared/officeLayout';
+import { OFFICE_PROPS } from '../../../shared/officeProps';
 import type { OfficeSceneSnapshot } from '../../types';
 import type { SimulatedOfficeAgent } from '../../lib/simulation';
+import type { OfficeDensity } from '../../pages/virtualOfficeOptions';
+import type { OfficeTheme } from '../../types';
 import { AgentSprite } from './AgentSprite';
-import { OFFICE_OBSTACLES } from '../../../shared/officeLayout';
-
-type OfficeDensity = 'cozy' | 'balanced' | 'dense';
 
 interface OfficeSceneProps {
   scene: OfficeSceneSnapshot;
@@ -12,6 +13,7 @@ interface OfficeSceneProps {
   selectedAgentId: string | null;
   onSelectAgent: (agentId: string) => void;
   density: OfficeDensity;
+  theme: OfficeTheme;
 }
 
 function tileSizeForDensity(density: OfficeDensity): number {
@@ -24,7 +26,11 @@ function zoneClass(zoneId: string): string {
   return `office-zone office-zone-${zoneId}`;
 }
 
-export function OfficeScene({ scene, agents, selectedAgentId, onSelectAgent, density }: OfficeSceneProps) {
+function propClass(kind: string): string {
+  return `office-prop office-prop-${kind}`;
+}
+
+export function OfficeScene({ scene, agents, selectedAgentId, onSelectAgent, density, theme }: OfficeSceneProps) {
   const tileSize = tileSizeForDensity(density);
   const widthPx = scene.width * tileSize;
   const heightPx = scene.height * tileSize;
@@ -38,7 +44,7 @@ export function OfficeScene({ scene, agents, selectedAgentId, onSelectAgent, den
   );
 
   return (
-    <div className="office-scene-shell">
+    <div className={`office-scene-shell office-scene-theme-${theme}`}>
       <div
         className="office-scene"
         style={{
@@ -47,6 +53,10 @@ export function OfficeScene({ scene, agents, selectedAgentId, onSelectAgent, den
           ['--office-tile-size' as string]: `${tileSize}px`,
         }}
       >
+        <div className="office-ambience-layer" aria-hidden>
+          <span className="office-ambience-orb" />
+        </div>
+
         <div className="office-floor-layer" aria-hidden>
           {tiles.map((tile) => (
             <span
@@ -72,6 +82,21 @@ export function OfficeScene({ scene, agents, selectedAgentId, onSelectAgent, den
                 top: `${obstacle.y * tileSize}px`,
                 width: `${obstacle.width * tileSize}px`,
                 height: `${obstacle.height * tileSize}px`,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="office-prop-layer" aria-hidden>
+          {OFFICE_PROPS.map((prop) => (
+            <span
+              key={prop.id}
+              className={propClass(prop.kind)}
+              style={{
+                left: `${prop.x * tileSize}px`,
+                top: `${prop.y * tileSize}px`,
+                width: `${prop.width * tileSize}px`,
+                height: `${prop.height * tileSize}px`,
               }}
             />
           ))}

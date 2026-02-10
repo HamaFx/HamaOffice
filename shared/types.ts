@@ -5,6 +5,7 @@ export type OfficeAgentActivityState = 'offline' | 'idle' | 'active' | 'blocked'
 export type OfficeDirection = 'up' | 'down' | 'left' | 'right';
 export type OfficeAlertSeverity = 'info' | 'warning' | 'critical';
 export type OfficeSyncStatus = 'live' | 'stale' | 'offline';
+export type OfficeTheme = 'night' | 'day' | 'neon';
 
 export interface AgentIdentityProfile {
   seed: string;

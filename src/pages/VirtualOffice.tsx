@@ -1,32 +1,28 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Filter, RefreshCw, Search, Signal, Sparkles, Workflow } from 'lucide-react';
+import {
+  AlertTriangle,
+  Filter,
+  Moon,
+  Palette,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  Signal,
+  Sparkles,
+  Sun,
+  Workflow,
+} from 'lucide-react';
 import { OfficeScene } from '../components/office/OfficeScene';
 import { useOfficeLiveState } from '../hooks/useOfficeLiveState';
 import { useOfficeSimulation } from '../hooks/useOfficeSimulation';
-import type { AgentOfficeRole, AgentOfficeRuntimeStatus } from '../types';
-
-const roleOptions: Array<{ value: 'all' | AgentOfficeRole; label: string }> = [
-  { value: 'all', label: 'All Roles' },
-  { value: 'orchestrator', label: 'Orchestrator' },
-  { value: 'planner', label: 'Planner' },
-  { value: 'frontend', label: 'Frontend' },
-  { value: 'backend', label: 'Backend' },
-  { value: 'reviewer', label: 'Reviewer' },
-  { value: 'worker', label: 'Worker' },
-];
-
-const statusOptions: Array<{ value: 'all' | AgentOfficeRuntimeStatus; label: string }> = [
-  { value: 'all', label: 'All Statuses' },
-  { value: 'online', label: 'Online' },
-  { value: 'idle', label: 'Idle' },
-  { value: 'offline', label: 'Offline' },
-];
-
-const densityOptions = [
-  { value: 'cozy', label: 'Cozy' },
-  { value: 'balanced', label: 'Balanced' },
-  { value: 'dense', label: 'Dense' },
-] as const;
+import type { AgentOfficeRole, AgentOfficeRuntimeStatus, OfficeTheme } from '../types';
+import {
+  densityOptions,
+  roleOptions,
+  statusOptions,
+  themeOptions,
+  type OfficeDensity,
+} from './virtualOfficeOptions';
 
 function prettyState(value: string): string {
   return value.replace(/_/g, ' ');
@@ -44,6 +40,18 @@ function formatAgo(value: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+function toneForSeverity(severity: 'info' | 'warning' | 'critical'): string {
+  if (severity === 'critical') return 'chip-rose';
+  if (severity === 'warning') return 'chip-amber';
+  return 'chip-emerald';
+}
+
+function iconForTheme(theme: OfficeTheme) {
+  if (theme === 'day') return <Sun size={13} />;
+  if (theme === 'night') return <Moon size={13} />;
+  return <Palette size={13} />;
+}
+
 export default function VirtualOffice() {
   const { envelope, timeline, loading, refreshing, error, refresh } = useOfficeLiveState();
   const scene = envelope?.scene ?? null;
@@ -54,7 +62,8 @@ export default function VirtualOffice() {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | AgentOfficeRole>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | AgentOfficeRuntimeStatus>('all');
-  const [density, setDensity] = useState<(typeof densityOptions)[number]['value']>('balanced');
+  const [density, setDensity] = useState<OfficeDensity>('balanced');
+  const [theme, setTheme] = useState<OfficeTheme>('night');
 
   const filteredAgents = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -108,6 +117,7 @@ export default function VirtualOffice() {
     () => (scene ? scene.tasks.filter((task) => task.status.toLowerCase().includes('blocked')).length : 0),
     [scene],
   );
+
   const criticalAlerts = useMemo(
     () => (scene ? scene.alerts.filter((alert) => alert.severity === 'critical').length : 0),
     [scene],
@@ -115,8 +125,15 @@ export default function VirtualOffice() {
 
   const syncClass = scene?.sync_status === 'live' ? 'chip-emerald' : scene?.sync_status === 'stale' ? 'chip-amber' : 'chip-rose';
 
+  const resetFilters = () => {
+    setSearch('');
+    setRoleFilter('all');
+    setStatusFilter('all');
+    setDensity('balanced');
+  };
+
   return (
-    <div className="virtual-office-root">
+    <div className={`virtual-office-root virtual-office-theme-${theme}`}>
       <section className="virtual-hero">
         <div>
           <p className="hero-badge">
@@ -124,7 +141,7 @@ export default function VirtualOffice() {
           </p>
           <h1>Agent Workspace Simulation</h1>
           <p className="hero-copy">
-            Pixel agents navigate intake, build bays, and reviewer gate as workflow status changes. This scene mirrors live queue telemetry.
+            Pixel agents move across role zones, route through review gates, and broadcast live state to a tactical operations board.
           </p>
           <div className="chips virtual-hero-chips">
             <span className={`chip ${syncClass}`}>sync {scene?.sync_status ?? 'loading'}</span>
@@ -132,6 +149,7 @@ export default function VirtualOffice() {
             <span className="chip chip-rose">blocked {blockedCount}</span>
             <span className="chip chip-orange">critical {criticalAlerts}</span>
             <span className="chip chip-indigo">tasks {scene?.tasks.length ?? 0}</span>
+            <span className="chip chip-cyan">theme {theme}</span>
           </div>
         </div>
 
@@ -145,6 +163,29 @@ export default function VirtualOffice() {
           <AlertTriangle size={16} /> {error}
         </div>
       )}
+
+      <section className="virtual-overview-grid">
+        <article className="stat-card">
+          <p>Agents Tracked</p>
+          <h2>{agents.length}</h2>
+          <Signal size={18} />
+        </article>
+        <article className="stat-card">
+          <p>Filtered</p>
+          <h2>{filteredAgents.length}</h2>
+          <Filter size={18} />
+        </article>
+        <article className="stat-card">
+          <p>Critical Alerts</p>
+          <h2>{criticalAlerts}</h2>
+          <AlertTriangle size={18} />
+        </article>
+        <article className="stat-card">
+          <p>Pass Rate</p>
+          <h2>{workspace ? `${Math.round(workspace.metrics.pass_rate * 100)}%` : '--'}</h2>
+          <Workflow size={18} />
+        </article>
+      </section>
 
       <section className="panel virtual-controls">
         <div className="control-inline">
@@ -197,6 +238,29 @@ export default function VirtualOffice() {
             ))}
           </select>
         </div>
+
+        <div className="control-inline control-inline-wide">
+          <label>Scene Theme</label>
+          <div className="theme-switch-row">
+            {themeOptions.map((option) => (
+              <button
+                type="button"
+                key={option.value}
+                className={`theme-switch-btn ${theme === option.value ? 'theme-switch-btn-active' : ''}`}
+                onClick={() => setTheme(option.value)}
+              >
+                {iconForTheme(option.value)} {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="control-inline control-inline-actions">
+          <label>Actions</label>
+          <button type="button" className="btn-soft" onClick={resetFilters}>
+            <RotateCcw size={14} /> Reset Filters
+          </button>
+        </div>
       </section>
 
       {!scene ? (
@@ -212,6 +276,7 @@ export default function VirtualOffice() {
                 <span className="chip chip-slate">agents {filteredAgents.length}</span>
                 <span className="chip chip-cyan">zones {scene.zones.length}</span>
                 <span className="chip chip-teal">density {density}</span>
+                <span className="chip chip-indigo">theme {theme}</span>
               </div>
               <p>Flow: intake to role bay to reviewer gate to break area</p>
             </div>
@@ -221,6 +286,7 @@ export default function VirtualOffice() {
               selectedAgentId={selectedAgentId}
               onSelectAgent={setSelectedAgentId}
               density={density}
+              theme={theme}
             />
           </article>
 
@@ -289,9 +355,7 @@ export default function VirtualOffice() {
                     <div key={event.id} className="ticker-item">
                       <div className="chips">
                         <span className="chip chip-slate">{event.type}</span>
-                        <span className={`chip ${event.severity === 'critical' ? 'chip-rose' : event.severity === 'warning' ? 'chip-amber' : 'chip-emerald'}`}>
-                          {event.severity}
-                        </span>
+                        <span className={`chip ${toneForSeverity(event.severity)}`}>{event.severity}</span>
                       </div>
                       <p>{event.message}</p>
                       <small>{formatAgo(event.createdAt)}</small>
@@ -313,7 +377,7 @@ export default function VirtualOffice() {
                   >
                     <span>{agent.identity.callsign}</span>
                     <span>{agent.displayName}</span>
-                    <span className="muted">{agent.activityState}</span>
+                    <span className="muted">{agent.runtimeStatus} / {agent.activityState}</span>
                   </button>
                 ))}
               </div>
