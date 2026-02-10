@@ -1,10 +1,9 @@
 import { useMemo } from 'react';
 import { OFFICE_OBSTACLES } from '../../../shared/officeLayout';
 import { OFFICE_PROPS } from '../../../shared/officeProps';
-import type { OfficeSceneSnapshot } from '../../types';
+import type { OfficeSceneSnapshot, OfficeTheme } from '../../types';
 import type { SimulatedOfficeAgent } from '../../lib/simulation';
 import type { OfficeDensity } from '../../pages/virtualOfficeOptions';
-import type { OfficeTheme } from '../../types';
 import { AgentSprite } from './AgentSprite';
 
 interface OfficeSceneProps {
@@ -23,11 +22,11 @@ function tileSizeForDensity(density: OfficeDensity): number {
 }
 
 function zoneClass(zoneId: string): string {
-  return `office-zone office-zone-${zoneId}`;
+  return `vo-zone vo-zone-${zoneId}`;
 }
 
 function propClass(kind: string): string {
-  return `office-prop office-prop-${kind}`;
+  return `vo-prop vo-prop-${kind}`;
 }
 
 export function OfficeScene({ scene, agents, selectedAgentId, onSelectAgent, density, theme }: OfficeSceneProps) {
@@ -44,24 +43,24 @@ export function OfficeScene({ scene, agents, selectedAgentId, onSelectAgent, den
   );
 
   return (
-    <div className={`office-scene-shell office-scene-theme-${theme}`}>
+    <div className={`vo-scene-shell vo-theme-${theme}`}>
       <div
-        className="office-scene"
+        className="vo-scene"
         style={{
           width: `${widthPx}px`,
           height: `${heightPx}px`,
-          ['--office-tile-size' as string]: `${tileSize}px`,
+          ['--vo-tile-size' as string]: `${tileSize}px`,
         }}
       >
-        <div className="office-ambience-layer" aria-hidden>
-          <span className="office-ambience-orb" />
+        <div className="vo-ambience-layer" aria-hidden>
+          <span className="vo-ambience-orb" />
         </div>
 
-        <div className="office-floor-layer" aria-hidden>
+        <div className="vo-floor-layer" aria-hidden>
           {tiles.map((tile) => (
             <span
               key={`tile-${tile.x}-${tile.y}`}
-              className={`office-floor-tile ${(tile.x + tile.y) % 2 === 0 ? 'office-floor-tile-a' : 'office-floor-tile-b'}`}
+              className={`vo-floor-tile ${(tile.x + tile.y) % 2 === 0 ? 'vo-floor-a' : 'vo-floor-b'}`}
               style={{
                 left: `${tile.x * tileSize}px`,
                 top: `${tile.y * tileSize}px`,
@@ -72,11 +71,11 @@ export function OfficeScene({ scene, agents, selectedAgentId, onSelectAgent, den
           ))}
         </div>
 
-        <div className="office-obstacle-layer" aria-hidden>
+        <div className="vo-obstacle-layer" aria-hidden>
           {OFFICE_OBSTACLES.map((obstacle, index) => (
             <span
               key={`obstacle-${index}`}
-              className="office-obstacle"
+              className="vo-obstacle"
               style={{
                 left: `${obstacle.x * tileSize}px`,
                 top: `${obstacle.y * tileSize}px`,
@@ -87,7 +86,7 @@ export function OfficeScene({ scene, agents, selectedAgentId, onSelectAgent, den
           ))}
         </div>
 
-        <div className="office-prop-layer" aria-hidden>
+        <div className="vo-prop-layer" aria-hidden>
           {OFFICE_PROPS.map((prop) => (
             <span
               key={prop.id}
@@ -129,7 +128,7 @@ export function OfficeScene({ scene, agents, selectedAgentId, onSelectAgent, den
           <button
             key={agent.agentId}
             type="button"
-            className={`office-agent-token ${selectedAgentId === agent.agentId ? 'office-agent-token-selected' : ''} ${agent.isMoving ? 'office-agent-token-moving' : ''}`}
+            className={`vo-agent-token ${selectedAgentId === agent.agentId ? 'vo-agent-selected' : ''} ${agent.isMoving ? 'vo-agent-moving' : ''}`}
             style={{
               left: `${agent.position.x * tileSize}px`,
               top: `${agent.position.y * tileSize}px`,
@@ -142,7 +141,7 @@ export function OfficeScene({ scene, agents, selectedAgentId, onSelectAgent, den
               activityState={agent.activityState}
               selected={selectedAgentId === agent.agentId}
             />
-            <span className="office-agent-label">{agent.identity.callsign}</span>
+            <span className="vo-agent-label">{agent.identity.callsign}</span>
           </button>
         ))}
       </div>

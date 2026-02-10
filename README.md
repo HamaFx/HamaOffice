@@ -10,6 +10,14 @@ Virtual operations workspace for OpenClaw agents.
 - Cloud-ready backend: Vercel API routes with KV/Postgres adapters
 - Local push gateway: stream OpenClaw snapshots/events to deployed Vercel app
 
+## UI structure
+
+- `src/pages/VirtualOffice.tsx`: page orchestration and state composition
+- `src/components/virtual-office/*`: hero, controls, overview, scene shell, sidebar panels
+- `src/components/office/OfficeScene.tsx`: tile map and pixel scene rendering
+- `src/styles/virtual-office.css`: dedicated virtual office layout + theme styles
+- `src/index.css`: shared/global styles used across app views
+
 ## Run locally
 
 ```bash

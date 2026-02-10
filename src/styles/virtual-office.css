@@ -1,0 +1,469 @@
+.vo-page {
+  --vo-surface: rgba(8, 23, 18, 0.86);
+  --vo-surface-strong: rgba(4, 17, 13, 0.94);
+  --vo-stroke: rgba(125, 211, 175, 0.28);
+  --vo-stroke-strong: rgba(74, 222, 128, 0.46);
+  --vo-floor-a: rgba(8, 31, 21, 0.76);
+  --vo-floor-b: rgba(11, 37, 25, 0.84);
+  --vo-obstacle-top: rgba(16, 49, 35, 0.9);
+  --vo-obstacle-bottom: rgba(6, 24, 17, 0.92);
+  --vo-obstacle-line: rgba(52, 211, 153, 0.14);
+  --vo-orb-core: rgba(177, 231, 255, 0.72);
+  --vo-orb-glow: rgba(56, 189, 248, 0.22);
+}
+
+.vo-page.virtual-office-theme-day {
+  --vo-surface: rgba(214, 250, 232, 0.9);
+  --vo-surface-strong: rgba(188, 244, 219, 0.95);
+  --vo-stroke: rgba(15, 118, 110, 0.27);
+  --vo-stroke-strong: rgba(5, 150, 105, 0.45);
+  --vo-floor-a: rgba(212, 248, 232, 0.9);
+  --vo-floor-b: rgba(184, 240, 216, 0.94);
+  --vo-obstacle-top: rgba(170, 233, 203, 0.92);
+  --vo-obstacle-bottom: rgba(123, 208, 176, 0.96);
+  --vo-obstacle-line: rgba(15, 118, 110, 0.2);
+  --vo-orb-core: rgba(255, 248, 164, 0.92);
+  --vo-orb-glow: rgba(253, 224, 71, 0.35);
+}
+
+.vo-page.virtual-office-theme-neon {
+  --vo-surface: rgba(20, 14, 39, 0.86);
+  --vo-surface-strong: rgba(14, 8, 34, 0.94);
+  --vo-stroke: rgba(217, 70, 239, 0.3);
+  --vo-stroke-strong: rgba(168, 85, 247, 0.5);
+  --vo-floor-a: rgba(25, 19, 44, 0.88);
+  --vo-floor-b: rgba(42, 28, 69, 0.88);
+  --vo-obstacle-top: rgba(58, 38, 104, 0.95);
+  --vo-obstacle-bottom: rgba(30, 20, 66, 0.98);
+  --vo-obstacle-line: rgba(34, 211, 238, 0.24);
+  --vo-orb-core: rgba(244, 114, 182, 0.88);
+  --vo-orb-glow: rgba(236, 72, 153, 0.3);
+}
+
+.vo-page .virtual-hero,
+.vo-page .panel,
+.vo-page .stat-card,
+.vo-page .task-card,
+.vo-page .ticker-item,
+.vo-page .roster-item,
+.vo-page .inspector-meta div,
+.vo-page .office-map-hud {
+  background: var(--vo-surface);
+  border-color: var(--vo-stroke);
+}
+
+.vo-page .virtual-hero {
+  border-color: var(--vo-stroke-strong);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--vo-surface-strong) 80%, black), var(--vo-surface)),
+    repeating-linear-gradient(
+      45deg,
+      color-mix(in srgb, var(--vo-stroke) 28%, transparent) 0,
+      color-mix(in srgb, var(--vo-stroke) 28%, transparent) 4px,
+      transparent 4px,
+      transparent 8px
+    );
+  border-radius: 8px;
+}
+
+.vo-page .hero h1,
+.vo-page .virtual-hero h1 {
+  letter-spacing: 0.08em;
+}
+
+.vo-page .hero-copy,
+.vo-page .vo-copy {
+  max-width: 900px;
+}
+
+.vo-page .virtual-overview-grid {
+  gap: 12px;
+}
+
+.vo-page .vo-overview-card {
+  border-radius: 6px;
+  min-height: 90px;
+  display: grid;
+  align-content: end;
+}
+
+.vo-page .vo-controls {
+  gap: 12px;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.vo-page .control-inline input,
+.vo-page .control-inline select {
+  border-radius: 4px;
+  background: var(--vo-surface-strong);
+}
+
+.vo-page .control-inline label {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.vo-page .theme-switch-btn,
+.vo-page .btn-soft {
+  background: var(--vo-surface-strong);
+}
+
+.vo-page .theme-switch-btn {
+  min-height: 36px;
+}
+
+.vo-page .vo-layout {
+  grid-template-columns: 1.62fr 0.92fr;
+  align-items: start;
+  gap: 12px;
+}
+
+.vo-page .vo-scene-card {
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.vo-page .vo-scene-card h3 {
+  margin-bottom: 8px;
+}
+
+.vo-page .vo-map-hud {
+  border-radius: 4px;
+  padding: 9px;
+  margin-bottom: 10px;
+  background: var(--vo-surface-strong);
+}
+
+.vo-page .vo-map-hud p {
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.vo-scene-shell {
+  position: relative;
+  overflow: auto;
+  border: 1px solid var(--vo-stroke);
+  border-radius: 4px;
+  max-height: min(78vh, 760px);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--vo-stroke) 35%, transparent) inset,
+    0 24px 50px rgba(0, 0, 0, 0.4);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--vo-surface-strong) 90%, black), var(--vo-surface)),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--vo-stroke) 16%, transparent) 0, color-mix(in srgb, var(--vo-stroke) 16%, transparent) 1px, transparent 1px, transparent 18px),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--vo-stroke) 16%, transparent) 0, color-mix(in srgb, var(--vo-stroke) 16%, transparent) 1px, transparent 1px, transparent 18px);
+}
+
+.vo-scene-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  opacity: 0.28;
+  background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(20, 83, 45, 0.22) 2px, rgba(20, 83, 45, 0.22) 3px);
+}
+
+.vo-scene {
+  position: relative;
+  min-width: 100%;
+  min-height: 420px;
+}
+
+.vo-ambience-layer,
+.vo-floor-layer,
+.vo-obstacle-layer,
+.vo-prop-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.vo-ambience-layer {
+  z-index: 0;
+}
+
+.vo-floor-layer {
+  z-index: 0;
+}
+
+.vo-obstacle-layer {
+  z-index: 1;
+}
+
+.vo-prop-layer {
+  z-index: 2;
+}
+
+.vo-ambience-orb {
+  position: absolute;
+  width: 78px;
+  height: 78px;
+  border-radius: 3px;
+  top: 16px;
+  right: 22px;
+  background: radial-gradient(circle at center, var(--vo-orb-core), rgba(255, 255, 255, 0) 68%);
+  box-shadow: 0 0 80px var(--vo-orb-glow);
+  animation: vo-drift-orb 9s ease-in-out infinite;
+}
+
+.vo-floor-tile {
+  position: absolute;
+  box-shadow: 0 0 0 1px rgba(16, 58, 40, 0.12) inset;
+}
+
+.vo-floor-a {
+  background: var(--vo-floor-a);
+}
+
+.vo-floor-b {
+  background: var(--vo-floor-b);
+}
+
+.vo-obstacle {
+  position: absolute;
+  border: 1px solid color-mix(in srgb, var(--vo-stroke) 65%, transparent);
+  border-radius: 2px;
+  background:
+    linear-gradient(180deg, var(--vo-obstacle-top), var(--vo-obstacle-bottom)),
+    repeating-linear-gradient(90deg, var(--vo-obstacle-line) 0, var(--vo-obstacle-line) 2px, transparent 2px, transparent 4px);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--vo-stroke) 35%, transparent) inset,
+    0 3px 0 rgba(3, 11, 8, 0.5);
+}
+
+.vo-prop {
+  position: absolute;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(5, 20, 15, 0.6) inset;
+}
+
+.vo-prop-desk {
+  background:
+    linear-gradient(180deg, rgba(186, 146, 104, 0.92), rgba(110, 75, 44, 0.94)),
+    repeating-linear-gradient(90deg, rgba(61, 40, 21, 0.35) 0, rgba(61, 40, 21, 0.35) 2px, transparent 2px, transparent 3px);
+}
+
+.vo-prop-terminal {
+  background:
+    linear-gradient(180deg, rgba(59, 130, 246, 0.92), rgba(30, 64, 175, 0.94)),
+    linear-gradient(90deg, rgba(125, 211, 252, 0.65), transparent 65%);
+  animation: vo-flicker-terminal 1.8s steps(2) infinite;
+}
+
+.vo-prop-server {
+  background:
+    linear-gradient(180deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95)),
+    repeating-linear-gradient(0deg, rgba(52, 211, 153, 0.4) 0, rgba(52, 211, 153, 0.4) 1px, transparent 1px, transparent 4px);
+}
+
+.vo-prop-plant {
+  background:
+    radial-gradient(circle at 50% 35%, rgba(110, 231, 183, 0.95), rgba(34, 197, 94, 0.92) 55%),
+    linear-gradient(180deg, rgba(22, 101, 52, 0.9), rgba(21, 128, 61, 0.95));
+}
+
+.vo-prop-coffee {
+  background:
+    linear-gradient(180deg, rgba(251, 191, 36, 0.95), rgba(180, 83, 9, 0.9)),
+    linear-gradient(90deg, rgba(255, 248, 220, 0.35), transparent 58%);
+}
+
+.vo-prop-coffee::after {
+  content: '';
+  position: absolute;
+  left: 35%;
+  top: -35%;
+  width: 34%;
+  height: 40%;
+  background: rgba(255, 255, 255, 0.35);
+  filter: blur(2px);
+  animation: vo-steam-rise 1.6s ease-in-out infinite;
+}
+
+.vo-prop-gate-beacon {
+  background: linear-gradient(180deg, rgba(244, 63, 94, 0.96), rgba(159, 18, 57, 0.95));
+  box-shadow:
+    0 0 0 1px rgba(255, 228, 230, 0.45) inset,
+    0 0 16px rgba(244, 63, 94, 0.72);
+  animation: vo-beacon-pulse 1.2s ease-in-out infinite;
+}
+
+.vo-prop-table {
+  background:
+    linear-gradient(180deg, rgba(173, 216, 230, 0.88), rgba(71, 85, 105, 0.9)),
+    repeating-linear-gradient(90deg, rgba(51, 65, 85, 0.3) 0, rgba(51, 65, 85, 0.3) 2px, transparent 2px, transparent 4px);
+}
+
+.vo-prop-crate {
+  background:
+    linear-gradient(180deg, rgba(115, 115, 115, 0.95), rgba(55, 65, 81, 0.95)),
+    repeating-linear-gradient(0deg, rgba(229, 231, 235, 0.18) 0, rgba(229, 231, 235, 0.18) 1px, transparent 1px, transparent 3px);
+}
+
+.vo-zone {
+  position: absolute;
+  border: 1px solid color-mix(in srgb, var(--vo-stroke-strong) 85%, transparent);
+  border-radius: 2px;
+  padding: 4px;
+  z-index: 3;
+  background: color-mix(in srgb, var(--vo-surface) 80%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--vo-stroke) 20%, transparent) inset;
+}
+
+.vo-zone header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--display-font);
+}
+
+.vo-zone-intake { border-color: rgba(34, 197, 94, 0.74); background: rgba(34, 197, 94, 0.08); }
+.vo-zone-planner_bay { border-color: rgba(56, 189, 248, 0.8); background: rgba(14, 116, 144, 0.14); }
+.vo-zone-frontend_bay { border-color: rgba(45, 212, 191, 0.82); background: rgba(13, 148, 136, 0.15); }
+.vo-zone-backend_bay { border-color: rgba(249, 115, 22, 0.82); background: rgba(194, 65, 12, 0.14); }
+.vo-zone-reviewer_gate { border-color: rgba(59, 130, 246, 0.82); background: rgba(30, 64, 175, 0.14); }
+.vo-zone-break_area { border-color: rgba(168, 85, 247, 0.78); background: rgba(107, 33, 168, 0.12); }
+.vo-zone-orchestrator_desk { border-color: rgba(250, 204, 21, 0.82); background: rgba(161, 98, 7, 0.12); }
+
+.vo-agent-token {
+  --size: calc(var(--vo-tile-size, 18px) * 1.55);
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+  transform: translate(-50%, -65%);
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  z-index: 4;
+}
+
+.vo-agent-moving {
+  animation: vo-bob 450ms steps(2) infinite;
+}
+
+.vo-agent-selected {
+  filter: drop-shadow(0 0 12px rgba(74, 222, 128, 0.5));
+}
+
+.vo-agent-label {
+  position: absolute;
+  left: 50%;
+  top: 103%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: var(--pixel-label);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.vo-page.virtual-office-theme-day .vo-agent-label {
+  color: #1d4332;
+  text-shadow: 0 0 8px rgba(236, 253, 245, 0.85);
+}
+
+.vo-page.virtual-office-theme-neon .vo-agent-label {
+  color: #f5d0fe;
+  text-shadow: 0 0 12px rgba(236, 72, 153, 0.45);
+}
+
+.vo-page .vo-sidebar {
+  gap: 12px;
+}
+
+.vo-page .vo-inspector,
+.vo-page .vo-ticker,
+.vo-page .vo-roster,
+.vo-page .vo-footer {
+  border-radius: 8px;
+}
+
+.vo-page .vo-error {
+  border-radius: 6px;
+}
+
+.vo-page .vo-footer {
+  margin-top: 0;
+}
+
+@media (max-width: 1180px) {
+  .vo-page .vo-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .vo-page .virtual-sidebar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vo-page .virtual-roster {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .vo-page .virtual-overview-grid,
+  .vo-page .virtual-controls,
+  .vo-page .metric-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .vo-page .control-inline-wide,
+  .vo-page .control-inline-actions {
+    grid-column: 1 / -1;
+  }
+
+  .vo-page .virtual-sidebar {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .vo-page .virtual-overview-grid,
+  .vo-page .virtual-controls,
+  .vo-page .metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vo-page .theme-switch-row {
+    grid-template-columns: 1fr;
+  }
+
+  .vo-scene-shell {
+    max-height: 62vh;
+  }
+}
+
+@keyframes vo-bob {
+  0% { transform: translate(-50%, -65%); }
+  50% { transform: translate(-50%, -69%); }
+  100% { transform: translate(-50%, -65%); }
+}
+
+@keyframes vo-flicker-terminal {
+  0%,
+  100% { filter: brightness(1); }
+  50% { filter: brightness(1.35); }
+}
+
+@keyframes vo-beacon-pulse {
+  0%,
+  100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+@keyframes vo-steam-rise {
+  0% { transform: translateY(2px) scale(0.95); opacity: 0.35; }
+  50% { transform: translateY(-5px) scale(1.08); opacity: 0.62; }
+  100% { transform: translateY(-12px) scale(1.18); opacity: 0; }
+}
+
+@keyframes vo-drift-orb {
+  0% { transform: translateY(0) translateX(0); }
+  50% { transform: translateY(4px) translateX(-4px); }
+  100% { transform: translateY(0) translateX(0); }
+}
